@@ -5,18 +5,19 @@
 
 #include <Wire.h>  // Wire library - used for I2C communication
 
-
+//Variables 
 int ADXL345 = 0x53; // The ADXL345 sensor I2C address
 
 float X_out, Y_out, Z_out;  // Outputs
 
-float X_trigger = -0.4;
+float right_trigger = -0.4; // Global VAR position to the right arrow
 
-float Y_trigger = 0.4;
+float left_trigger = 0.4; // Global VAR position to the left arrow
 
-int stopBlink;
+//Variables 
 
 int startRead(){
+  
   Wire.beginTransmission(ADXL345);
   Wire.write(0x32); // Start with register 0x32 (ACCEL_XOUT_H)
   Wire.endTransmission(false);
@@ -33,6 +34,7 @@ int startRead(){
 
 
 void setup() {
+  
   Serial.begin(9600); // Initiate serial communication for printing the results on the Serial monitor
   Wire.begin(); // Initiate the Wire library
   
@@ -42,47 +44,54 @@ void setup() {
   // Enable measurement
   Wire.write(8); // (8dec -> 0000 1000 binary) Bit D3 High for measuring enable 
   Wire.endTransmission();
-  //delay(100);
 
   // Pin LEDs
+  pinMode(3,OUTPUT);
+  pinMode(4,OUTPUT);
+  pinMode(5,OUTPUT);
+  pinMode(6,OUTPUT);
   pinMode(7,OUTPUT);
+  
   pinMode(8,OUTPUT);
   pinMode(9,OUTPUT);
+  pinMode(10,OUTPUT);
+  pinMode(11,OUTPUT);
+  pinMode(12,OUTPUT);
+  pinMode(13,OUTPUT);
   
   digitalWrite(8,HIGH); // Break light should always be ON and blinking
-
-  //Read acceleromter data
-
-  startRead();
-
-  /*
-  Serial.print("Xa= ");
-  Serial.print(X_out);
-  Serial.print("   Ya= ");
-  Serial.print(Y_out);
-  Serial.print("   Za= ");
-  Serial.println(Z_out);
-
-  Serial.print("X Trigger ");
-  Serial.print(X_trigger);
-  Serial.print("  Y Trigger ");
-  Serial.print(Y_trigger);
-  */
-  
 
 }
 
 void loop() {
-    
+    //Start acceleromter data
     startRead();
-   
- // Let the left arrow blinking
- if (X_out < X_trigger){
+    
+    if (X_out < right_trigger){
 
-    X_trigger = X_out + 0.3;
+    right_trigger = X_out + 0.3;
   
     keepLeftBlink();
-    /*
+    
+    /* TESTERS
+    Serial.print('\n');
+    Serial.print('\r');
+    Serial.print("============ X ==============");
+    Serial.print(X_out);
+    Serial.print('\n');
+    Serial.print('\r');
+    */
+   
+ } 
+
+
+ if (X_out > left_trigger){
+
+    left_trigger =  X_out - 0.3;
+  
+    keepRightBlink();
+ 
+    /* TESTERS
     Serial.print('\n');
     Serial.print('\r');
     Serial.print("============ X ==============");
@@ -93,21 +102,42 @@ void loop() {
    
  } 
  
- if(Y_out > Y_trigger){X_trigger = -0.4; } 
+ 
+  if(Y_out > left_trigger){ right_trigger = -0.4;} // Check the Y position and if is greater than 0.4 then reset the trigger to -0.4 
 
-    /*
-    Serial.print("============ X Trigger ==============");
-    Serial.print(X_trigger);
-    Serial.print('\n');
-    Serial.print('\r');
-    */
+  if(Y_out > 0.4){left_trigger = 0.4;} // Check the Y position and if is lower than -0.4 then reset the trigger to 0.4
+  
+  /* TESTER
+  Serial.print("Xa=     ");
+  Serial.print(X_out);
+  Serial.print("      Ya= ");
+  Serial.print(Y_out);
+  Serial.print("      Za= ");
+  Serial.println(Z_out);
+
+  Serial.print("Right Trigger ");
+  Serial.print(right_trigger);
+  Serial.print("  Left Trigger ");
+  Serial.print(left_trigger);
+    
+
+  Serial.print("============ X Trigger ==============");
+  Serial.print(X_trigger);
+  Serial.print('\n');
+  Serial.print('\r');
+  */
+    
+  return ;
+  
 }
 
 int keepRightBlink(){
       digitalWrite(7, HIGH);
-      delay(100);
+      delay(99);
+      
       digitalWrite(7, LOW);
       delay(100);
+
 }
 
 int keepLeftBlink(){
